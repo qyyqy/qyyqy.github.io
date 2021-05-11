@@ -1,42 +1,45 @@
 <!DOCTYPE html>
 <html lang="zh">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>K线图</title>
-  <style>
-    body {
-      padding: 0;
-      margin: 0;
-    }
-    .chart-wrap {
-      margin: 0;
-      padding: 60px;
-    }
-  </style>
-</head>
-<body>
-  <div class="chart-wrap">
-    <canvas id="canvas"></canvas>
-  </div>
-  <script src="data.js"></script>
-  <script src="chart.js"></script>
-  <script>
-    const lineChart = new KLine('canvas');
-    //初始化图表
-    lineChart.init({
-      W: 1200,
-      H: 600,
-      xAxisLabel: data.category,
-      xSplitNumber: 6,
-      ySplitNumber: 6,
-      minValue: data.minValue,
-      maxValue: data.maxValue,
-      data: data.values,
-      legends: ['MA5', 'MA10', 'MA20']
-    });
-   
-  </script>
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>K线图</title>
+    <style>
+      body {
+        padding: 0;
+        margin: 0;
+      }
+      .chart-wrap {
+        margin: 0;
+        padding: 60px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="chart-wrap">
+      <canvas id="canvas"></canvas>
+    </div>
+    <script src="data.js"></script>
+    <script src="chart.js"></script>
+    <script>
+      const lineChart = new KLine('canvas');
+      //初始化图表
+      lineChart.init({
+        W: 1200,
+        H: 600,
+        xAxisLabel: data.category,
+        xSplitNumber: 6,
+        ySplitNumber: 6,
+        minValue: data.minValue,
+        maxValue: data.maxValue,
+        data: data.values,
+        legends: [
+          { text: 'MA5', color: '#00AAB6' },
+          { text: 'MA10', color: '#FA0092' },
+          { text: 'MA20', color: '#24359B' },
+        ],
+      });
+    </script>
+  </body>
 </html>
