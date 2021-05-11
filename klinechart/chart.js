@@ -46,6 +46,7 @@ class KLine extends Chart {
     this.drawYLabels();
     this.drawData();
     this.drawCurve();
+    this.drawLegends();
   }
 
   //绘制坐标系
@@ -234,6 +235,7 @@ class KLine extends Chart {
     return points;
   }
 
+  //绘制曲线路径
   drawCurvePath(points, lineColor) {
     const ctx = this.ctx;
     //获取控制点
@@ -274,6 +276,27 @@ class KLine extends Chart {
     }
     ctx.stroke();
     ctx.closePath();
+    ctx.restore();
+  }
+
+  //绘制图例
+  drawLegends() {
+    const legends = this.legends;
+    const ctx = this.ctx;
+    const X0 = this.W- this.origin[0];
+    ctx.save();
+    ctx.font = '16px PingFang-SC Arial';
+    ctx.fillStyle = '#666666';
+    for(let l = 0;l < legends.length;l++){
+      const metrics = ctx.measureText(legends[l].text).width + 20 * (legends.length-l);
+      ctx.fillText(legends[l].text, X0 - metrics*(legends.length - l), this.H);
+      ctx.beginPath();
+      ctx.strokeStyle = legends[l].color;
+      ctx.moveTo(X0 - metrics*(legends.length - l)-10, this.H - 8);
+      ctx.lineTo(X0 - metrics*(legends.length - l )- 50, this.H - 8);
+      ctx.stroke();
+      ctx.closePath();
+    }
     ctx.restore();
   }
 }
