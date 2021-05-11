@@ -19,14 +19,11 @@ class Chart {
     //配置splitNumber
     this.xSplitNumber = 6;
     //
-
-
-
   }
 
   init(opt) {
     Object.assign(this, opt);
-    console.log('dpr', dpr)
+    console.log('dpr', dpr);
     //防止画布图像模糊
     this.canvas.style.width = this.W + 'px';
     this.canvas.style.height = this.H + 'px';
@@ -48,6 +45,7 @@ class KLine extends Chart {
     this.drawXLabels();
     this.drawYLabels();
     this.drawData();
+    this.drawCurve();
   }
 
   //绘制坐标系
@@ -94,17 +92,17 @@ class KLine extends Chart {
     ctx.textBaseline = 'top';
     //绘制坐标点
     const xAxisCoord = [];
-    for(let i = 0; i < labelLength; i++) {
-      if(i % xSplitNumber === 0) {
+    for (let i = 0; i < labelLength; i++) {
+      if (i % xSplitNumber === 0) {
         ctx.beginPath();
         ctx.strokeStyle = '#D9D9D9';
         ctx.moveTo(X0 + xSpacing * (i + 1), Y0 - 6);
         ctx.lineTo(X0 + xSpacing * (i + 1), this.origin[1]);
-        ctx.fillText(xAxisLabel[i], X0 + xSpacing * (i + 1), Y0);        
+        ctx.fillText(xAxisLabel[i], X0 + xSpacing * (i + 1), Y0);
         ctx.stroke();
         ctx.closePath();
-      } 
-      xAxisCoord.push(X0 + xSpacing * (i + 1));      
+      }
+      xAxisCoord.push(X0 + xSpacing * (i + 1));
     }
     this.xAxisCoord = xAxisCoord;
   }
@@ -137,16 +135,15 @@ class KLine extends Chart {
     ctx.textBaseline = 'middle';
     ctx.textAlign = 'right';
 
-    for(let i = 0; i <= ySplitNumber; i ++) {
+    for (let i = 0; i <= ySplitNumber; i++) {
       ctx.beginPath();
       ctx.strokeStyle = '#D9D9D9';
       ctx.moveTo(X0, Y0 - (i + 1) * ySpacing);
       ctx.lineTo(X1, Y0 - (i + 1) * ySpacing);
-      ctx.fillText(minValue + i * eachYValue, X0 - 6, Y0 - i * ySpacing);        
+      ctx.fillText(minValue + i * eachYValue, X0 - 6, Y0 - i * ySpacing);
       ctx.stroke();
       ctx.closePath();
     }
-    
   }
 
   //绘制数据
@@ -158,6 +155,7 @@ class KLine extends Chart {
     const eachYValue = this.eachYValue;
     //1单位的坐标量
     const ratio = ySpacing / eachYValue;
+    this.ratio = ratio;
     console.log(ySpacing, eachYValue);
     const minValue = this.minValue;
     const xAxisCoord = this.xAxisCoord;
@@ -169,32 +167,171 @@ class KLine extends Chart {
       let highestItem = data[i][3];
       if (openItem > closeItem) {
         ctx.strokeStyle = ctx.fillStyle = '#00C000'; //设置线的颜色
-      }else {
+      } else {
         ctx.strokeStyle = ctx.fillStyle = '#FF0020'; //设置线的颜色
       }
       //console.log('fg', xAxisCoord[i],ctx.strokeStyle, openItem, closeItem);
       //绘制高低线
-      ctx.beginPath(); 
+      ctx.beginPath();
       ctx.moveTo(xAxisCoord[i], Y0 - ratio * (lowestItem - minValue));
       ctx.lineTo(xAxisCoord[i], Y0 - ratio * (highestItem - minValue));
       ctx.closePath();
       ctx.stroke();
       //console.log('fg2', xAxisCoord[i],ctx.strokeStyle, openItem, closeItem, lowestItem, highestItem);
       //绘制矩形
-      if(openItem > closeItem) {
-        ctx.fillRect(xAxisCoord[i] - 8, Y0 - ratio * (openItem - minValue), 16, ratio * (openItem - closeItem));
-      }else {
-        ctx.fillRect(xAxisCoord[i] - 8, Y0 - ratio * (closeItem - minValue), 16, ratio * (closeItem - openItem));
+      if (openItem > closeItem) {
+        ctx.fillRect(
+          xAxisCoord[i] - 8,
+          Y0 - ratio * (openItem - minValue),
+          16,
+          ratio * (openItem - closeItem)
+        );
+      } else {
+        ctx.fillRect(
+          xAxisCoord[i] - 8,
+          Y0 - ratio * (closeItem - minValue),
+          16,
+          ratio * (closeItem - openItem)
+        );
       }
       ctx.restore();
     }
   }
 
-  //绘制曲线
+  //绘制曲线 TODO:MA5\MA10\MA20\MA30
   drawCurve() {
-    const ctx = this.ctx;
-
+    let data = this.data;
+    let MA5 = calculateMA(data, 5);
+    let MA10 = calculateMA(data, 10);
+    let MA20 = calculateMA(data, 20);
+    // let MA30  = calculateMA(data, 30);
+    //console.log(data, MA5, MA10, MA20, MA30);
+    let MA5Points = this.getLinePoints(MA5);
+    let MA10Points = this.getLinePoints(MA10);
+    let MA20Points = this.getLinePoints(MA20);
+    
+    //绘制MA线路径
+    this.drawCurvePath(MA5Points, '#00AAB6');
+    this.drawCurvePath(MA10Points, '#FA0092');
+    this.drawCurvePath(MA20Points, '#24359B');
   }
 
+  getLinePoints(data) {
+    //获取X坐标
+    const xAxisCoord = this.xAxisCoord;
+    const Y0 = this.H - this.origin[1];
+    const ratio = this.ratio;
+    const minValue = this.minValue;
+    let points = [];
+    for (let i = 0; i < data.length; i++) {
+      if (data[i]) {
+        points.push({
+          x: xAxisCoord[i],
+          y: Y0 - ratio * (data[i] - minValue),
+        });
+      }
+    }
+    return points;
+  }
+
+  drawCurvePath(points, lineColor) {
+    const ctx = this.ctx;
+    //获取控制点
+    let controlPoints = getControlPoint(points);
+    //console.log('control', controlPoints);
+    let int = 0;
+    ctx.beginPath();
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = lineColor; //设置线的颜色
+    ctx.moveTo(points[0].x, points[0].y);
+    for (var i = 0; i < points.length; i++) {
+      if (i == 0) {
+        ctx.quadraticCurveTo(controlPoints[0].x, controlPoints[0].y, points[1].x, points[1].y);
+        int = int + 1;
+      } else if (i < points.length - 2) {
+        ctx.bezierCurveTo(controlPoints[int].x, controlPoints[int].y, controlPoints[int + 1].x, controlPoints[int + 1].y, points[i + 1].x, points[i + 1].y);
+        int += 2;
+      } else if (i == points.length - 2) {
+        ctx.quadraticCurveTo(controlPoints[controlPoints.length - 1].x, controlPoints[controlPoints.length - 1].y, points[points.length - 1].x, points[points.length - 1].y);
+      }
+    }
+    ctx.stroke();
+    ctx.closePath();
+    ctx.restore();
+  }
 }
 
+//计算MA值
+function calculateMA(data, num) {
+  let result = [];
+  for (let i = 0; i < data.length; i++) {
+    if (i < num) {
+      result.push(null);
+      continue;
+    }
+    let sum = 0;
+    for (var j = 0; j < num; j++) {
+      sum += data[i - j][1]; //收盘
+    }
+    result.push(sum / num);
+  }
+  return result;
+}
+
+//获取控制点
+function getControlPoint(points) {
+  let rt = 0.3;
+  let count = points.length - 2;
+  let arr = [];
+  for (let i = 0; i < count; i++) {
+    //获取三个点的坐标
+    let P0 = points[i];
+    let P1 = points[i + 1];
+    let P2 = points[i + 2];
+    let v1 = new Vector(P0.x - P1.x, P0.y - P1.y);
+    let v2 = new Vector(P2.x - P1.x, P2.y - P1.y);
+    let v1Len = v1.length(); //线段P0P1的长
+    let v2Len = v2.length(); //线段P1P2的长
+    let centerV = v1.normalize().add(v2.normalize()).normalize();
+    let ncp1 = new Vector(centerV.y, centerV.x * -1);
+    let ncp2 = new Vector(centerV.y * -1, centerV.x);
+    if (ncp1.angle(v1) < 90) {
+      let p1 = ncp1.multiply(v1Len * rt).add(P1);
+      let p2 = ncp2.multiply(v2Len * rt).add(P1);
+      arr.push(p1, p2);
+    } else {
+      let p1 = ncp1.multiply(v2Len * rt).add(P1);
+      let p2 = ncp2.multiply(v1Len * rt).add(P1);
+      arr.push(p2, p1);
+    }
+  }
+  return arr;
+}
+class Vector {
+  constructor(x, y) {
+    this.x = x;
+    this.y = y;
+  }
+
+  length() {
+    return Math.sqrt(this.x ** 2 + this.y ** 2);
+  }
+  normalize() {
+    let inv = 1 / this.length() == Infinity ? 0 : 1 / this.length();
+    return new Vector(this.x * inv, this.y * inv);
+  }
+  add(v) {
+    return new Vector(this.x + v.x, this.y + v.y);
+  }
+  multiply(f) {
+    return new Vector(this.x * f, this.y * f);
+  }
+  dot(v) {
+    return this.x * v.x + this.y * v.y;
+  }
+  angle(v) {
+    return (
+      (Math.acos(this.dot(v) / (this.length() * v.length())) * 180) / Math.PI
+    );
+  }
+}
