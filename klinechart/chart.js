@@ -209,7 +209,7 @@ class KLine extends Chart {
     let MA5Points = this.getLinePoints(MA5);
     let MA10Points = this.getLinePoints(MA10);
     let MA20Points = this.getLinePoints(MA20);
-    
+
     //绘制MA线路径
     this.drawCurvePath(MA5Points, '#00AAB6');
     this.drawCurvePath(MA10Points, '#FA0092');
@@ -246,13 +246,30 @@ class KLine extends Chart {
     ctx.moveTo(points[0].x, points[0].y);
     for (var i = 0; i < points.length; i++) {
       if (i == 0) {
-        ctx.quadraticCurveTo(controlPoints[0].x, controlPoints[0].y, points[1].x, points[1].y);
+        ctx.quadraticCurveTo(
+          controlPoints[0].x,
+          controlPoints[0].y,
+          points[1].x,
+          points[1].y
+        );
         int = int + 1;
       } else if (i < points.length - 2) {
-        ctx.bezierCurveTo(controlPoints[int].x, controlPoints[int].y, controlPoints[int + 1].x, controlPoints[int + 1].y, points[i + 1].x, points[i + 1].y);
+        ctx.bezierCurveTo(
+          controlPoints[int].x,
+          controlPoints[int].y,
+          controlPoints[int + 1].x,
+          controlPoints[int + 1].y,
+          points[i + 1].x,
+          points[i + 1].y
+        );
         int += 2;
       } else if (i == points.length - 2) {
-        ctx.quadraticCurveTo(controlPoints[controlPoints.length - 1].x, controlPoints[controlPoints.length - 1].y, points[points.length - 1].x, points[points.length - 1].y);
+        ctx.quadraticCurveTo(
+          controlPoints[controlPoints.length - 1].x,
+          controlPoints[controlPoints.length - 1].y,
+          points[points.length - 1].x,
+          points[points.length - 1].y
+        );
       }
     }
     ctx.stroke();
@@ -307,6 +324,8 @@ function getControlPoint(points) {
   }
   return arr;
 }
+
+//构造矢量
 class Vector {
   constructor(x, y) {
     this.x = x;
