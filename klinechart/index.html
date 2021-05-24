@@ -13,19 +13,28 @@
       .chart-wrap {
         margin: 0;
         padding: 60px;
+        position: relative;
+      }
+      #layer {
+        /* border: 1px solid red; */
+        position: absolute;
+        top: 60px;
+        left: 60px;
+      }
+      .theme-black {
+        background: #0d1117;
       }
     </style>
   </head>
-  <body>
+  <body class="theme-black">
     <div class="chart-wrap">
+      <canvas id="layer"></canvas>
       <canvas id="canvas"></canvas>
     </div>
     <script src="data.js"></script>
     <script src="chart.js"></script>
     <script>
-      const lineChart = new KLine('canvas');
-      //初始化图表
-      lineChart.init({
+      const opts = {
         W: 1200,
         H: 600,
         xAxisLabel: data.category,
@@ -39,7 +48,17 @@
           { text: 'MA10', color: '#FA0092' },
           { text: 'MA20', color: '#24359B' },
         ],
-      });
+      };
+      const lineChart = new KLine('canvas');
+      //初始化图表
+      lineChart.init(opts);
+      const chartLayer = new crossLayer('layer');
+      chartLayer.init(opts);
+      const layer = document.getElementById('layer');
+      layer.onmousemove = function (e) {
+        //console.log('elem', e)
+        chartLayer.handleMouseMove(e);
+      };
     </script>
   </body>
 </html>

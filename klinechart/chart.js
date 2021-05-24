@@ -33,6 +33,13 @@ class Chart {
     //创建图表
     this.create();
   }
+
+  //坐标系转换
+  // transformCoordinate(x, y) {
+  //   x = x - this.origin[0];
+  //   y = this.H - this.origin[1] - y;
+  //   return { x, y }
+  // }
 }
 
 class KLine extends Chart {
@@ -61,7 +68,7 @@ class KLine extends Chart {
     ctx.save();
     ctx.beginPath();
     //设置线的颜色
-    ctx.strokeStyle = '#0557AC';
+    ctx.strokeStyle = '#D9D9D9';
     //开始绘制
     ctx.moveTo(X0, Y0);
     ctx.lineTo(X0, Y1);
@@ -88,7 +95,7 @@ class KLine extends Chart {
     const Y0 = this.H - this.origin[1] + 6;
     //设置文字样式
     ctx.textAlign = 'center';
-    ctx.fillStyle = '#005FC3';
+    ctx.fillStyle = '#D9D9D9';
     ctx.font = '12px PingFang-SC Arial';
     ctx.textBaseline = 'top';
     //绘制坐标点
@@ -97,13 +104,16 @@ class KLine extends Chart {
       if (i % xSplitNumber === 0) {
         ctx.beginPath();
         ctx.strokeStyle = '#D9D9D9';
-        ctx.moveTo(X0 + xSpacing * (i + 1), Y0 - 6);
-        ctx.lineTo(X0 + xSpacing * (i + 1), this.origin[1]);
-        ctx.fillText(xAxisLabel[i], X0 + xSpacing * (i + 1), Y0);
+        // ctx.moveTo(X0 + xSpacing * (i + 1), Y0 - 6);
+        // ctx.lineTo(X0 + xSpacing * (i + 1), this.origin[1]);
+        // ctx.fillText(xAxisLabel[i], X0 + xSpacing * (i + 1), Y0);
+        // ctx.moveTo(X0 + xSpacing * i, Y0 - 6);
+        // ctx.lineTo(X0 + xSpacing * i, this.origin[1]);
+        ctx.fillText(xAxisLabel[i], X0 + xSpacing * i, Y0);
         ctx.stroke();
         ctx.closePath();
       }
-      xAxisCoord.push(X0 + xSpacing * (i + 1));
+      xAxisCoord.push(X0 + xSpacing * i);
     }
     this.xAxisCoord = xAxisCoord;
   }
@@ -127,6 +137,11 @@ class KLine extends Chart {
     //计算坐标间距
     const ySpacing = Math.round(yAxisHeight / ySplitNumber);
     this.ySpacing = ySpacing;
+    let minVal = this.minValue;
+    let maxVal = this.maxValue;
+    console.log(minVal, maxVal);
+    const bounds = getBounds(minVal, maxVal, ySplitNumber);
+    console.log('bounds', bounds);
     //起点坐标
     const X0 = this.origin[0];
     const X1 = this.W - X0;
@@ -138,7 +153,7 @@ class KLine extends Chart {
 
     for (let i = 0; i <= ySplitNumber; i++) {
       ctx.beginPath();
-      ctx.strokeStyle = '#D9D9D9';
+      ctx.strokeStyle = '#666';
       ctx.moveTo(X0, Y0 - (i + 1) * ySpacing);
       ctx.lineTo(X1, Y0 - (i + 1) * ySpacing);
       ctx.fillText(minValue + i * eachYValue, X0 - 6, Y0 - i * ySpacing);
@@ -243,7 +258,7 @@ class KLine extends Chart {
     //console.log('control', controlPoints);
     let int = 0;
     ctx.beginPath();
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1;
     ctx.strokeStyle = lineColor; //设置线的颜色
     ctx.moveTo(points[0].x, points[0].y);
     for (var i = 0; i < points.length; i++) {
@@ -283,22 +298,253 @@ class KLine extends Chart {
   drawLegends() {
     const legends = this.legends;
     const ctx = this.ctx;
-    const X0 = this.W- this.origin[0];
+    const X0 = this.W - this.origin[0];
     ctx.save();
     ctx.font = '16px PingFang-SC Arial';
     ctx.fillStyle = '#666666';
-    for(let l = 0;l < legends.length;l++){
-      const metrics = ctx.measureText(legends[l].text).width + 20 * (legends.length-l);
-      ctx.fillText(legends[l].text, X0 - metrics*(legends.length - l), this.H);
+    for (let l = 0; l < legends.length; l++) {
+      const metrics =
+        ctx.measureText(legends[l].text).width + 20 * (legends.length - l);
+      ctx.fillText(
+        legends[l].text,
+        X0 - metrics * (legends.length - l),
+        this.H
+      );
       ctx.beginPath();
       ctx.strokeStyle = legends[l].color;
-      ctx.moveTo(X0 - metrics*(legends.length - l)-10, this.H - 8);
-      ctx.lineTo(X0 - metrics*(legends.length - l )- 50, this.H - 8);
+      ctx.moveTo(X0 - metrics * (legends.length - l) - 10, this.H - 8);
+      ctx.lineTo(X0 - metrics * (legends.length - l) - 50, this.H - 8);
       ctx.stroke();
       ctx.closePath();
     }
     ctx.restore();
   }
+}
+
+class crossLayer extends Chart {
+  constructor(canvas) {
+    super(canvas);
+  }
+
+  create() {
+    //this.transformCoordinate();
+    this.getRatio();
+    this.X00 = 60;
+    this.getCategoryCoord();
+  }
+  //获取边界值
+  getRatio() {
+    let minVal = this.minValue;
+    let maxVal = this.maxValue;
+    let ySplitNumber = this.ySplitNumber;
+    const bounds = getBounds(minVal, maxVal, ySplitNumber);
+    const { start, end, each } = bounds;
+    const yAxisHeight = this.H - this.origin[1] * 2;
+    const ratio = (end - start) / yAxisHeight;
+    this.ratio = ratio;
+    this.bounds = bounds;
+  }
+  //实际坐标转化为值
+  // transformCoordinate(x, y) {
+  // const minValue = getBounds(this.minValue);
+  // const maxValue = getBounds(this.maxValue);
+  // let minVal = this.minValue;
+  // let maxVal = this.maxValue;
+  // let ySplitNumber = this.ySplitNumber;
+  // const bounds = getBounds(minVal, maxVal, ySplitNumber);
+  // const { start, end, each } = bounds;
+  // const yAxisHeight = this.H - this.origin[1] * 2;
+  // const ratio = (end - start) / yAxisHeight;
+  //console.log(start, end, yAxisHeight, ratio);
+  //   const Y0 = this.H - this.origin[1];
+  //   console.log('y', y);
+  //   //console.log('Y0', Y0);
+  //   console.log('Y1', Y0 - y);
+  // }
+
+  handleMouseMove(e) {
+    //console.log(e.offsetX, e.offsetY);
+    let X = e.offsetX;
+    let Y = e.offsetY;
+    // let ratio = this.ratio;
+    // console.log('ratio', ratio)
+    //console.log('Y', Y);
+    //coordToValue(X, Y);
+    // console.log(this.getBounds());
+    this.clear();
+    this.drawCrossHair(X, Y);
+  }
+  //获取X轴类目坐标
+  getCategoryCoord() {
+    //获取X类目
+    const xAxisLabel = this.xAxisLabel;
+    //获取X坐标数
+    const labelLength = xAxisLabel.length;
+    //计算X轴的长度
+    const xAxisWidth = this.W - this.origin[0] * 2;
+    //计算坐标间距
+    const xSpacing = Math.round(xAxisWidth / labelLength);
+    this.xSpacing = xSpacing;
+    //原点坐标
+    const X0 = this.origin[0];
+    let category = [];
+    for(let i = 0; i < labelLength; i++) {
+      category.push(X0 + i * xSpacing)
+    }
+
+    this.xAxisCoord = category;
+  }
+
+  //绘制十字光标
+  drawCrossHair(X, Y) {
+    if (
+      X < this.origin[0] ||
+      X > this.W - this.origin[0] ||
+      Y < this.origin[1] - 0.5 ||
+      Y > this.H - this.origin[1] + 0.5
+    ) {
+      return false;
+    }
+    let X0 = this.origin[0];
+    let Y0 = this.H - this.origin[1];
+    let xSpacing = this.xSpacing;
+    console.log('dif', X - X0, xSpacing);
+    let ctx = this.ctx;
+    const lineStyle = { color: '#D9D9D9', type: 'dash', opt: [4, 2] };
+    let horizon = [
+      { x: this.origin[0], y: Y },
+      { x: this.W - this.origin[0], y: Y },
+    ];
+    //绘制横线
+    drawLine(ctx, horizon, lineStyle);
+    //绘制纵坐标
+    let end = this.bounds.end;
+    console.log('end', end);
+    let ratio = this.ratio;
+    let Y1 = Y - this.origin[1];
+    console.log('Y1', end - Y1 * ratio);
+    let valueY = end - Y1 * ratio;
+    const textRectStyle = {
+      color: '#D9D9D9',
+      background: '#21262D',
+      lineHeight: 24,
+      padding: 6,
+      textAlign: 'right',
+      textBaseline: 'middle',
+      font: '12px PingFang-SC Arial',
+    };
+    drawTextRect(ctx, valueY, horizon[0], textRectStyle);
+    //let ratio = this.ratio;
+    // let crossY = coordToValue(start, Y1);
+    // console.log('crossY', crossY);
+
+    //绘制竖线
+    console.log('vertical', X);
+    // if (true) {
+    //   drawLine(ctx, vertical, lineStyle);
+    // }
+    //绘制横坐标
+    let idx = Math.round((X - X0) / xSpacing);
+    let valueX = this.xAxisLabel[idx];
+    let xCoord = this.xAxisCoord[idx]
+    console.log(idx, valueX, xCoord);
+    let vertical = [
+      { x: xCoord, y: this.H - this.origin[1] },
+      { x: xCoord, y: this.origin[1] },
+    ];
+    drawLine(ctx, vertical, lineStyle);
+    drawTextRect(ctx, valueX, { x: xCoord , y: Y0 }, textRectStyle);
+  }
+
+  //清除画布
+  clear() {
+    let ctx = this.ctx;
+    ctx.clearRect(0, 0, this.W, this.H);
+  }
+}
+
+//获得边界值
+function getBounds(minVal, maxVal, n) {
+  let min = minVal - parseInt(minVal % 100);
+  let max = maxVal;
+  let each = Math.ceil((max - min) / n); //向上取整
+
+  let start = parseInt(min);
+  let end = start + each * n;
+
+  return { start, end, each };
+}
+
+//绘制直线
+function drawLine(ctx, [start, end], lineStyle) {
+  ctx.save();
+  ctx.beginPath();
+  //设置线的颜色
+  const { color, type, opt } = lineStyle;
+  ctx.strokeStyle = lineStyle.color;
+  if (type == 'dash') {
+    ctx.setLineDash(lineStyle.opt);
+  } else {
+    ctx.setLineDash([]);
+  }
+  //开始绘制
+  ctx.moveTo(start.x, start.y);
+  ctx.lineTo(end.x, end.y);
+  ctx.stroke();
+  ctx.closePath();
+  ctx.restore();
+}
+
+//绘制文本矩形
+function drawTextRect(ctx, val, point, textRectStyle) {
+  ctx.save();
+  const {
+    color,
+    padding,
+    background,
+    textAlign,
+    textBaseline,
+    lineHeight,
+    font,
+  } = textRectStyle;
+  
+  const textWidth = ctx.measureText(val).width + padding * 3;
+  ctx.fillStyle = background;
+  ctx.setLineDash([]);
+  ctx.strokeStyle = '#D9D9D9';
+  ctx.strokeRect(
+    point.x - textWidth - 6,
+    point.y - lineHeight / 2,
+    textWidth,
+    lineHeight
+  );
+  ctx.fillRect(
+    point.x - textWidth - 6,
+    point.y - lineHeight / 2,
+    textWidth,
+    lineHeight
+  );
+  ctx.fillStyle = color;
+  ctx.font = font;
+  ctx.textAlign = textAlign;
+  ctx.textBaseline = textBaseline;
+  ctx.fillText(val, point.x - 6 - padding, point.y);
+
+  //ctx.stroke();
+  ctx.closePath();
+  ctx.restore();
+}
+
+function valueToCoord(val) {}
+
+//坐标转化为值
+function coordToValue(start, ratio, Y) {
+  return start + Y * ratio;
+}
+
+//坐标转化为类目
+function coordToCategory(xAixsLabel, X) {
+  //console.log('x', X);
 }
 
 //计算MA值
