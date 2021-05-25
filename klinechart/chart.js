@@ -63,14 +63,24 @@ class Chart {
     const xAxisLabel = this.xAxisLabel;
     //获取X坐标数
     const labelLength = xAxisLabel.length;
-    //计算X轴的长度
-    const xAxisWidth = this.W - this.origin[0] * 2;
-    //计算X轴坐标间距
-    const xSpacing = Math.round(xAxisWidth / labelLength);
+    //获取X坐标间距
+    const xSpacing = this.getXSpacing();
     //图表的原点横坐标
     const X0 = this.origin[0];
     //求所有横坐标
     return Array.from({ length: labelLength }, (v, i) => X0 + xSpacing * i);
+  }
+
+  //计算X轴坐标间距
+  getXSpacing() {
+    //计算X轴的长度
+    const xAxisWidth = this.W - this.origin[0] * 2;
+    //获取X类目
+    const xAxisLabel = this.xAxisLabel;
+    //获取X坐标数
+    const labelLength = xAxisLabel.length;
+
+    return Math.round(xAxisWidth / labelLength);
   }
 
   //获取要显示的纵坐标
@@ -83,7 +93,7 @@ class Chart {
     return Array.from({ length: ySplitNumber }, (v, i) => end - i * each);
   }
 
-  //Y坐标转换
+  //值转化为Y坐标
   transYCoords(data) {
     const eachYValue = this.eachYValue();
     const { end } = this.getBounds();
@@ -92,12 +102,17 @@ class Chart {
     return Y0 + Y;
   }
 
-  //坐标系转换
-  // transformCoordinate(x, y) {
-  //   x = x - this.origin[0];
-  //   y = this.H - this.origin[1] - y;
-  //   return { x, y }
-  // }
+  /**
+   *canvas画布坐标转化为图表坐标===================
+   */
+  transToValue(Y) {
+    const eachYValue = this.eachYValue();
+    let Y0 = this.origin[1];
+    const { end } = this.getBounds();
+    let valueY = end - (Y - Y0) * eachYValue;
+    valueY = valueY.toFixed(2);
+    return valueY;
+  }
 }
 
 class KLine extends Chart {
@@ -110,7 +125,6 @@ class KLine extends Chart {
     this.drawXLabels();
     this.drawYLabels();
     this.drawCandlestick();
-    // this.drawData();
     this.drawCurve();
     // this.drawLegends();
   }
@@ -139,16 +153,6 @@ class KLine extends Chart {
       { x: X0, y: Y1 },
     ];
     drawLine(ctx, YLine, lineStyle);
-    // ctx.save();
-    // ctx.beginPath();
-    // //设置线的颜色
-    // ctx.strokeStyle = '#D9D9D9';
-    // //开始绘制
-    // ctx.moveTo(X0, Y0);
-    // ctx.lineTo(X0, Y1);
-    // ctx.lineTo(X1, Y1);
-    // ctx.stroke();
-    // ctx.closePath();
   }
 
   //绘制X轴坐标点
@@ -184,43 +188,6 @@ class KLine extends Chart {
         );
       }
     }
-    // const ctx = this.ctx;
-    // //获取X类目
-    // const xAxisLabel = this.xAxisLabel;
-    // //获取X坐标数
-    // const labelLength = xAxisLabel.length;
-    // //计算X轴的长度
-    // const xAxisWidth = this.W - this.origin[0] * 2;
-    // //计算坐标间距
-    // const xSpacing = Math.round(xAxisWidth / labelLength);
-    // //获取分割数
-    // const xSplitNumber = this.xSplitNumber;
-    // //起点坐标
-    // const X0 = this.origin[0];
-    // const Y0 = this.H - this.origin[1] + 6;
-    //设置文字样式
-    // ctx.textAlign = 'center';
-    // ctx.fillStyle = '#D9D9D9';
-    // ctx.font = '12px PingFang-SC Arial';
-    // ctx.textBaseline = 'top';
-    //绘制坐标点
-    // const xAxisCoord = [];
-    // for (let i = 0; i < labelLength; i++) {
-    //   if (i % xSplitNumber === 0) {
-    //     ctx.beginPath();
-    //     ctx.strokeStyle = '#D9D9D9';
-    // ctx.moveTo(X0 + xSpacing * (i + 1), Y0 - 6);
-    // ctx.lineTo(X0 + xSpacing * (i + 1), this.origin[1]);
-    // ctx.fillText(xAxisLabel[i], X0 + xSpacing * (i + 1), Y0);
-    // ctx.moveTo(X0 + xSpacing * i, Y0 - 6);
-    // ctx.lineTo(X0 + xSpacing * i, this.origin[1]);
-    //     ctx.fillText(xAxisLabel[i], X0 + xSpacing * i, Y0);
-    //     ctx.stroke();
-    //     ctx.closePath();
-    //   }
-    //   xAxisCoord.push(X0 + xSpacing * i);
-    // }
-    // this.xAxisCoord = xAxisCoord;
   }
 
   //绘制Y轴坐标点
@@ -257,46 +224,6 @@ class KLine extends Chart {
         { color: '#666' }
       );
     }
-
-    // const ctx = this.ctx;
-    // //获取最大最小值
-    // let minValue = this.minValue.toFixed(0);
-    // minValue = minValue - parseInt(minValue % 100);
-    // this.minValue = minValue;
-    // let maxValue = this.maxValue.toFixed(0);
-    // maxValue = maxValue - parseInt(maxValue % 100) + 40;
-    // const ySplitNumber = this.ySplitNumber;
-    // //计算每格的值
-    // const diffValue = Math.round(maxValue - minValue);
-    // const eachYValue = Math.round(diffValue / ySplitNumber);
-    // this.eachYValue = eachYValue;
-    // //计算X轴的长度
-    // const yAxisHeight = this.H - this.origin[1] * 2;
-    // //计算坐标间距
-    // const ySpacing = Math.round(yAxisHeight / ySplitNumber);
-    // this.ySpacing = ySpacing;
-    // let minVal = this.minValue;
-    // let maxVal = this.maxValue;
-    // console.log(minVal, maxVal);
-    // const bounds = getBounds(minVal, maxVal, ySplitNumber);
-    // console.log('bounds', bounds);
-    // //起点坐标
-    // const X0 = this.origin[0];
-    // const X1 = this.W - X0;
-    // const Y0 = this.H - this.origin[1];
-    // //绘制Y坐标点
-    // console.log('66', ySpacing);
-    // ctx.textBaseline = 'middle';
-    // ctx.textAlign = 'right';
-    // for (let i = 0; i <= ySplitNumber; i++) {
-    //   ctx.beginPath();
-    //   ctx.strokeStyle = '#666';
-    //   ctx.moveTo(X0, Y0 - (i + 1) * ySpacing);
-    //   ctx.lineTo(X1, Y0 - (i + 1) * ySpacing);
-    //   ctx.fillText(minValue + i * eachYValue, X0 - 6, Y0 - i * ySpacing);
-    //   ctx.stroke();
-    //   ctx.closePath();
-    // }
   }
 
   //绘制蜡烛图
@@ -305,7 +232,6 @@ class KLine extends Chart {
     const xCoords = this.getXCoords();
     const data = this.data;
 
-    //const
     for (let i = 0; i < data.length; i++) {
       let x = xCoords[i];
       //开盘价
@@ -317,17 +243,16 @@ class KLine extends Chart {
       //最高价
       let highest = data[i][3];
       //绘制最高最低价
-      drawLine(
-        ctx,
-        [
-          { x, y: this.transYCoords(lowest) },
-          { x, y: this.transYCoords(highest) },
-        ],
-        {
-          color: getColor(open, close),
-        }
-      );
-
+      //   drawLine(
+      //     ctx,
+      //     [
+      //       { x, y: this.transYCoords(lowest) },
+      //       { x, y: this.transYCoords(highest) },
+      //     ],
+      //     {
+      //       color: getColor(open, close),
+      //     }
+      //   );
       let height = Math.abs(this.transYCoords(open) - this.transYCoords(close));
       let Y0 = Math.max(open, close);
       let y = this.transYCoords(Y0);
@@ -338,59 +263,19 @@ class KLine extends Chart {
         height,
       };
       //绘制开盘收盘矩形
-      drawRect(ctx, { x: x - rectStyle.width / 2, y }, rectStyle);
-    }
-  }
-
-  //绘制数据
-  drawData() {
-    const ctx = this.ctx;
-    ctx.save();
-    let data = this.data;
-    const ySpacing = this.ySpacing;
-    const eachYValue = this.eachYValue;
-    //1单位的坐标量
-    const ratio = ySpacing / eachYValue;
-    this.ratio = ratio;
-    console.log(ySpacing, eachYValue);
-    const minValue = this.minValue;
-    const xAxisCoord = this.xAxisCoord;
-    const Y0 = this.H - this.origin[1];
-    for (let i = 0; i < data.length; i++) {
-      let openItem = data[i][0];
-      let closeItem = data[i][1];
-      let lowestItem = data[i][2];
-      let highestItem = data[i][3];
-      if (openItem > closeItem) {
-        ctx.strokeStyle = ctx.fillStyle = '#00C000'; //设置线的颜色
-      } else {
-        ctx.strokeStyle = ctx.fillStyle = '#FF0020'; //设置线的颜色
-      }
-      //console.log('fg', xAxisCoord[i],ctx.strokeStyle, openItem, closeItem);
-      //绘制高低线
-      ctx.beginPath();
-      ctx.moveTo(xAxisCoord[i], Y0 - ratio * (lowestItem - minValue));
-      ctx.lineTo(xAxisCoord[i], Y0 - ratio * (highestItem - minValue));
-      ctx.closePath();
-      ctx.stroke();
-      //console.log('fg2', xAxisCoord[i],ctx.strokeStyle, openItem, closeItem, lowestItem, highestItem);
-      //绘制矩形
-      if (openItem > closeItem) {
-        ctx.fillRect(
-          xAxisCoord[i] - 8,
-          Y0 - ratio * (openItem - minValue),
-          16,
-          ratio * (openItem - closeItem)
+      setTimeout(() => {
+        drawLine(
+          ctx,
+          [
+            { x, y: this.transYCoords(lowest) },
+            { x, y: this.transYCoords(highest) },
+          ],
+          {
+            color: getColor(open, close),
+          }
         );
-      } else {
-        ctx.fillRect(
-          xAxisCoord[i] - 8,
-          Y0 - ratio * (closeItem - minValue),
-          16,
-          ratio * (closeItem - openItem)
-        );
-      }
-      ctx.restore();
+        drawRect(ctx, { x: x - rectStyle.width / 2, y }, rectStyle);
+      }, 200 * i);
     }
   }
 
@@ -412,7 +297,7 @@ class KLine extends Chart {
     this.drawCurvePath(MA20Points, '#24359B');
 
     //绘制收盘曲线
-    let closeData = data.map(item => item[1]);
+    let closeData = data.map((item) => item[1]);
     let closePoints = this.getLinePoints(closeData);
     this.drawCurvePath(closePoints, '#D9D9D9');
   }
@@ -510,79 +395,24 @@ class crossLayer extends Chart {
   }
 
   create() {
-    //this.transformCoordinate();
-    this.getRatio();
-    this.X00 = 60;
-    this.getCategoryCoord();
-    createTooltip(this.canvas);
+    this.xSpacing = this.getXSpacing();
   }
-  //获取边界值
-  getRatio() {
-    let minVal = this.minValue;
-    let maxVal = this.maxValue;
-    let ySplitNumber = this.ySplitNumber;
-    const bounds = getBounds(minVal, maxVal, ySplitNumber);
-    const { start, end, each } = bounds;
-    const yAxisHeight = this.H - this.origin[1] * 2;
-    const ratio = (end - start) / yAxisHeight;
-    this.ratio = ratio;
-    this.bounds = bounds;
-  }
-  //实际坐标转化为值
-  // transformCoordinate(x, y) {
-  // const minValue = getBounds(this.minValue);
-  // const maxValue = getBounds(this.maxValue);
-  // let minVal = this.minValue;
-  // let maxVal = this.maxValue;
-  // let ySplitNumber = this.ySplitNumber;
-  // const bounds = getBounds(minVal, maxVal, ySplitNumber);
-  // const { start, end, each } = bounds;
-  // const yAxisHeight = this.H - this.origin[1] * 2;
-  // const ratio = (end - start) / yAxisHeight;
-  //console.log(start, end, yAxisHeight, ratio);
-  //   const Y0 = this.H - this.origin[1];
-  //   console.log('y', y);
-  //   //console.log('Y0', Y0);
-  //   console.log('Y1', Y0 - y);
-  // }
 
   handleMouseMove(e) {
-    //console.log(e.offsetX, e.offsetY);
     let X = e.offsetX;
     let Y = e.offsetY;
-    this.pageX = e.pageX;
-    this.pageY = e.pageY;
-    // let ratio = this.ratio;
-    // console.log('ratio', ratio)
-    //console.log('Y', Y);
-    //coordToValue(X, Y);
-    // console.log(this.getBounds());
+    // this.pageX = e.pageX;
+    // this.pageY = e.pageY;
     this.clear();
     this.drawCrossHair(X, Y);
-  }
-  //获取X轴类目坐标
-  getCategoryCoord() {
-    //获取X类目
-    const xAxisLabel = this.xAxisLabel;
-    //获取X坐标数
-    const labelLength = xAxisLabel.length;
-    //计算X轴的长度
-    const xAxisWidth = this.W - this.origin[0] * 2;
-    //计算坐标间距
-    const xSpacing = Math.round(xAxisWidth / labelLength);
-    this.xSpacing = xSpacing;
-    //原点坐标
-    const X0 = this.origin[0];
-    let category = [];
-    for (let i = 0; i < labelLength; i++) {
-      category.push(X0 + i * xSpacing);
-    }
-
-    this.xAxisCoord = category;
   }
 
   //绘制十字光标
   drawCrossHair(X, Y) {
+    let ctx = this.ctx;
+    const xCoords = this.getXCoords();
+    const xSpacing = this.xSpacing;
+
     if (
       X < this.origin[0] ||
       X > this.W - this.origin[0] ||
@@ -591,56 +421,45 @@ class crossLayer extends Chart {
     ) {
       return false;
     }
+
     let X0 = this.origin[0];
-    let Y0 = this.H - this.origin[1];
-    let xSpacing = this.xSpacing;
-    console.log('dif', X - X0, xSpacing);
-    let ctx = this.ctx;
+    let X1 = this.W - this.origin[0];
+    let Y0 = this.origin[1];
+    let Y1 = this.H - this.origin[1];
     const lineStyle = { color: '#D9D9D9', type: 'dash', opt: [4, 2] };
     let horizon = [
-      { x: this.origin[0], y: Y },
-      { x: this.W - this.origin[0], y: Y },
+      { x: X0, y: Y },
+      { x: X1, y: Y },
     ];
-    //绘制横线
+    //绘制光标横线
     drawLine(ctx, horizon, lineStyle);
-    //绘制纵坐标
-    let end = this.bounds.end;
-    console.log('end', end);
-    let ratio = this.ratio;
-    let Y1 = Y - this.origin[1];
-    console.log('Y1', end - Y1 * ratio);
-    let valueY = end - Y1 * ratio;
-    valueY = valueY.toFixed(2);
+    //设置文本样式
+    let valueY = this.transToValue(Y);
+    const padding = 4;
+    const height = 24;
+    const textWidth = ctx.measureText(valueY).width + padding * 2;
     const textRectStyle = {
       color: '#D9D9D9',
       background: '#21262D',
-      lineHeight: 24,
-      padding: 4,
+      lineHeight: height,
+      padding,
       textAlign: 'right',
       textBaseline: 'middle',
       font: '12px PingFang-SC Arial',
+      width: textWidth,
+      height
     };
-    drawTextRect(ctx, valueY, horizon[0], textRectStyle);
-    //let ratio = this.ratio;
-    // let crossY = coordToValue(start, Y1);
-    // console.log('crossY', crossY);
+    drawTextRect(ctx, valueY, { x: X0 - textWidth - 4, y: Y - height/2 }, textRectStyle);
 
-    //绘制竖线
-    console.log('vertical', X);
-    // if (true) {
-    //   drawLine(ctx, vertical, lineStyle);
-    // }
-    //绘制横坐标
+    //绘制光标竖线
     let idx = Math.round((X - X0) / xSpacing);
     let valueX = this.xAxisLabel[idx];
-    let xCoord = this.xAxisCoord[idx];
-    console.log(idx, valueX, xCoord);
     let vertical = [
-      { x: xCoord, y: this.H - this.origin[1] },
-      { x: xCoord, y: this.origin[1] },
+      { x: xCoords[idx], y: Y0 },
+      { x: xCoords[idx], y: Y1 },
     ];
     drawLine(ctx, vertical, lineStyle);
-    drawTextRect(ctx, valueX, { x: xCoord, y: Y0 }, textRectStyle);
+    drawTextRect(ctx, valueX, { x: xCoords[idx] - textWidth/2, y: Y1 + 6 }, textRectStyle);
 
     //绘制提示框
     //drawTooltip(this.data[idx], { x:this.pageX, y:this.pageY });
@@ -654,18 +473,13 @@ class crossLayer extends Chart {
 }
 
 /**
- *图表坐标转化为canvas画布坐标===================
+ *
+ * 获取边界值
+ * @param {*} minVal
+ * @param {*} maxVal
+ * @param {*} n
+ * @returns
  */
-
-//X坐标转换
-function transXCoord(x) {
-  return;
-}
-
-//Y坐标转换
-function transYCoord(params) {}
-
-//获得边界值
 function getBounds(minVal, maxVal, n) {
   let min = minVal - parseInt(minVal % 100);
   let max = maxVal;
@@ -677,6 +491,13 @@ function getBounds(minVal, maxVal, n) {
   return { start, end, each };
 }
 
+/**
+ * 获取颜色
+ *
+ * @param {*} a
+ * @param {*} b
+ * @returns
+ */
 function getColor(a, b) {
   return a >= b ? '#00C000' : '#FF0020';
 }
@@ -763,61 +584,34 @@ function drawTextRect(ctx, val, point, textRectStyle) {
     textBaseline,
     lineHeight,
     font,
+    width,
+    height
   } = textRectStyle;
   ctx.font = font;
   ctx.textAlign = textAlign;
   ctx.textBaseline = textBaseline;
 
-  const textWidth = ctx.measureText(val).width + padding * 2;
   ctx.fillStyle = background;
   ctx.setLineDash([]);
   ctx.strokeStyle = '#D9D9D9';
   ctx.strokeRect(
-    point.x - textWidth - 2,
-    point.y - lineHeight / 2,
-    textWidth,
-    lineHeight
+    point.x,
+    point.y,
+    width + 20,
+    height
   );
   ctx.fillRect(
-    point.x - textWidth - 2,
-    point.y - lineHeight / 2,
-    textWidth,
-    lineHeight
+    point.x,
+    point.y,
+    width + 20,
+    height
   );
   ctx.fillStyle = color;
-  ctx.fillText(val, point.x - 2 - padding, point.y);
+  ctx.fillText(val, point.x + width + 20, point.y + height/2);
 
   //ctx.stroke();
   ctx.closePath();
   ctx.restore();
-}
-
-//绘制提示框
-function createTooltip(elem) {
-  const tooltip = document.createElement('div');
-  tooltip.classList.add('tooltip');
-  tooltip.style = 'position:absolute;z-index:999;background:orange;';
-  elem.parentNode.appendChild(tooltip);
-}
-
-function drawTooltip(txt, { x, y }) {
-  const tooltip = document.getElementsByClassName('tooltip')[0];
-  console.log(tooltip, txt);
-  tooltip.style.left = x + 'px';
-  tooltip.style.top = y + 'px';
-  tooltip.innerHTML = txt;
-}
-
-function valueToCoord(val) {}
-
-//坐标转化为值
-function coordToValue(start, ratio, Y) {
-  return start + Y * ratio;
-}
-
-//坐标转化为类目
-function coordToCategory(xAixsLabel, X) {
-  //console.log('x', X);
 }
 
 //计算MA值
@@ -895,4 +689,20 @@ class Vector {
       (Math.acos(this.dot(v) / (this.length() * v.length())) * 180) / Math.PI
     );
   }
+}
+
+//绘制提示框
+function createTooltip(elem) {
+  const tooltip = document.createElement('div');
+  tooltip.classList.add('tooltip');
+  tooltip.style = 'position:absolute;z-index:999;background:orange;';
+  elem.parentNode.appendChild(tooltip);
+}
+
+function drawTooltip(txt, { x, y }) {
+  const tooltip = document.getElementsByClassName('tooltip')[0];
+  console.log(tooltip, txt);
+  tooltip.style.left = x + 'px';
+  tooltip.style.top = y + 'px';
+  tooltip.innerHTML = txt;
 }
