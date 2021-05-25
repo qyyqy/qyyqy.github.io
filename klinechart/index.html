@@ -39,7 +39,7 @@
         H: 600,
         xAxisLabel: data.category,
         xSplitNumber: 6,
-        ySplitNumber: 6,
+        ySplitNumber: 5,
         minValue: data.minValue,
         maxValue: data.maxValue,
         data: data.values,
@@ -48,6 +48,7 @@
           { text: 'MA10', color: '#FA0092' },
           { text: 'MA20', color: '#24359B' },
         ],
+        animation: true //打开动画效果
       };
       const lineChart = new KLine('canvas');
       //初始化图表
